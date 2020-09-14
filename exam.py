@@ -454,6 +454,7 @@ def dbIn() :
     return result , cursor
 
 def insertDB(svtime,svdata,ibpDic) :
+    db,cursor = dbIn()
     tempSql="insert into SVtest_jy(room_name,date,time,file_name,SV_value) values(%s, %s, %s, %s,%s)"
     dd, tt = splitTime(svtime)
     for i in range(len(svtime)):
@@ -461,9 +462,10 @@ def insertDB(svtime,svdata,ibpDic) :
         np.savez(tempStr, Time=ibpDic[dd[i][4:8]+"IBPTIME"][i], Data=ibpDic[dd[i][4:8]+"IBPDATA"][i])
         tempDataSet = ("D-05", dd[i], tt[i], tempStr, float(svdata[i]))
         cursor.execute(tempSql, tempDataSet)
-        testdb.commit()
+        db.commit()
 
 def testDb(svtime,svdata,ibpDic) :
+    db, cursor = dbIn()
     tempSql = "insert into SVtest_jy3(room_name,date,time,file_name,SV_value) values(%s, %s, %s, %s,%s)"
     dd, tt = splitTime(svtime)
     for i in range(len(svtime)):
@@ -471,7 +473,7 @@ def testDb(svtime,svdata,ibpDic) :
         np.savez(tempStr, Time=ibpDic["TIME"][i], Data=ibpDic["DATA"][i])
         tempDataSet = ("D-05", dd[i], tt[i], tempStr, float(svdata[i]))
         cursor.execute(tempSql, tempDataSet)
-        testdb.commit()
+        db.commit()
 
 def splitTime(time):
     DBT = []
@@ -503,96 +505,86 @@ def splitTime(time):
 
     return DBT,DBD
 
-
-roomData=searchRoomAllFile("D-05")
-print(len(roomData))
-print(roomData)
-D05room0731=searchDate(roomData,20,7,31)
-D05room0804=searchDate(roomData,20,8,4)
-D05room0805=searchDate(roomData,20,8,5)
-D05room0806=searchDate(roomData,20,8,6)
-D05room0812=searchDate(roomData,20,8,12)
-
-
-D05roomAll=searchDate(roomData,20)
-svt,svd = findMachineInfo(D05roomAll,'EV1000','SV')
-ibpt,ibpd = findMachineInfo(D05roomAll,None,'IBP1')
-
-
-svt03,svd03 = findMachineInfo(D05room0731,'EV1000','SV')
-svt04,svd04 = findMachineInfo(D05room0804,'EV1000','SV')
-svt05,svd05 = findMachineInfo(D05room0805,'EV1000','SV')
-svt06,svd06 = findMachineInfo(D05room0806,'EV1000','SV')
-svt07,svd07 = findMachineInfo(D05room0812,'EV1000','SV')
-
-ibt03,ibd03 = findMachineInfo(D05room0731,None,'IBP1')
-ibt04,ibd04 = findMachineInfo(D05room0804,None,'IBP1')
-ibt05,ibd05 = findMachineInfo(D05room0805,None,'IBP1')
-ibt06,ibd06 = findMachineInfo(D05room0806,None,'IBP1')
-ibt07,ibd07 = findMachineInfo(D05room0812,None,'IBP1')
-
-
-
-a=[i for i in range(len(svt03))]
-b=[i for i in range(len(svt04))]
-c=[i for i in range(len(svt05))]
-d=[i for i in range(len(svt06))]
-e=[i for i in range(len(svt07))]
-for i,j,k,l,m in zip(a,b,c,d,e) :
-    svt03[i] = svt03[i] + datetime.timedelta(hours=9)
-    svt04[j] = svt04[j] + datetime.timedelta(hours=9)
-    svt05[k] = svt05[k] + datetime.timedelta(hours=9)
-    svt06[l] = svt06[l] + datetime.timedelta(hours=9)
-    svt07[m] = svt07[m] + datetime.timedelta(hours=9)
-
-ibt031 = timeChange(ibt03,'UTC')
-ibt041 = timeChange(ibt04,'UTC')
-ibt051 = timeChange(ibt05,'UTC')
-ibt061 = timeChange(ibt06,'UTC')
-ibt071 = timeChange(ibt07,'UTC')
-
-ibptt = timeChange(ibpt,'UTC')
-
-svt0731,svd0731,ibpt0731,ibpd0731=waveMatch(svt03,svd03,ibt031,ibd03)
-svt0804,svd0804,ibpt0804,ibpd0804=waveMatch(svt04,svd04,ibt041,ibd04)
-svt0805,svd0805,ibpt0805,ibpd0805=waveMatch(svt05,svd05,ibt051,ibd05)
-svt0806,svd0806,ibpt0806,ibpd0806=waveMatch(svt06,svd06,ibt061,ibd06)
-svt0812,svd0812,ibpt0812,ibpd0812=waveMatch(svt07,svd07,ibt071,ibd07)
-
-svtime,svdata,ibptime,ibpdata=waveMatch(svt,svd,ibptt,ibpd)
-
-IBP0731={"0731IBPTIME":ibpt0731,"0731IBPDATA":ibpd0731}
-IBP0804={"0804IBPTIME":ibpt0804,"0804IBPDATA":ibpd0804}
-IBP0805={"0805IBPTIME":ibpt0805,"0805IBPDATA":ibpd0805}
-IBP0806={"0806IBPTIME":ibpt0806,"0806IBPDATA":ibpd0806}
-IBP0812={"0812IBPTIME":ibpt0812,"0812IBPDATA":ibpd0812}
-
-saveDic(IBP0731,"IBP0731")
-
-IBPDic={"TIME":ibptime,"DATA":ibpdata}
-
-# 데이터 전처리 후 아래부터는 DB 입력을 위한 작업
-
-testdb,cursor = dbIn()
-IBP0731["0731IBPTIME"][0][0].year
-IBP0731["0731IBPTIME"][0][0].month
-IBP0731["0731IBPTIME"][0][0].day
-
-
-len(D05roomAll)
-
-#id,room_name,date,time,file_name,SV_value
-sql="insert into SVtest_jy(room_name,date,time,file_name,SV_value) values(%s, %s, %s, %s,%s)"
-dd,tt=splitTime(svt0731)
-for i in range(len(svt0731)) :
-    tempStr="/home/wlsdud1512/testNpz001/0731IBP" + str(i+1) +".npz"
-    np.savez(tempStr,Time=IBP0731["0731IBPTIME"][i],Data=IBP0731["0731IBPDATA"][i])
-    tempDataSet=("D-05",dd[i],tt[i],tempStr,float(svd0731[i]))
-    cursor.execute(sql,tempDataSet)
-    testdb.commit()
-
-len(svtime)
-
-testDb(svtime,svdata,IBPDic)
-
-
+# roomData=searchRoomAllFile("D-05")
+# print(len(roomData))
+# print(roomData)
+# D05room0731=searchDate(roomData,20,7,31)
+# D05room0804=searchDate(roomData,20,8,4)
+# D05room0805=searchDate(roomData,20,8,5)
+# D05room0806=searchDate(roomData,20,8,6)
+# D05room0812=searchDate(roomData,20,8,12)
+#
+#
+# D05roomAll=searchDate(roomData,20)
+# svt,svd = findMachineInfo(D05roomAll,'EV1000','SV')
+# ibpt,ibpd = findMachineInfo(D05roomAll,None,'IBP1')
+#
+#
+# svt03,svd03 = findMachineInfo(D05room0731,'EV1000','SV')
+# svt04,svd04 = findMachineInfo(D05room0804,'EV1000','SV')
+# svt05,svd05 = findMachineInfo(D05room0805,'EV1000','SV')
+# svt06,svd06 = findMachineInfo(D05room0806,'EV1000','SV')
+# svt07,svd07 = findMachineInfo(D05room0812,'EV1000','SV')
+#
+# ibt03,ibd03 = findMachineInfo(D05room0731,None,'IBP1')
+# ibt04,ibd04 = findMachineInfo(D05room0804,None,'IBP1')
+# ibt05,ibd05 = findMachineInfo(D05room0805,None,'IBP1')
+# ibt06,ibd06 = findMachineInfo(D05room0806,None,'IBP1')
+# ibt07,ibd07 = findMachineInfo(D05room0812,None,'IBP1')
+#
+#
+#
+# a=[i for i in range(len(svt03))]
+# b=[i for i in range(len(svt04))]
+# c=[i for i in range(len(svt05))]
+# d=[i for i in range(len(svt06))]
+# e=[i for i in range(len(svt07))]
+# for i,j,k,l,m in zip(a,b,c,d,e) :
+#     svt03[i] = svt03[i] + datetime.timedelta(hours=9)
+#     svt04[j] = svt04[j] + datetime.timedelta(hours=9)
+#     svt05[k] = svt05[k] + datetime.timedelta(hours=9)
+#     svt06[l] = svt06[l] + datetime.timedelta(hours=9)
+#     svt07[m] = svt07[m] + datetime.timedelta(hours=9)
+#
+# ibt031 = timeChange(ibt03,'UTC')
+# ibt041 = timeChange(ibt04,'UTC')
+# ibt051 = timeChange(ibt05,'UTC')
+# ibt061 = timeChange(ibt06,'UTC')
+# ibt071 = timeChange(ibt07,'UTC')
+#
+# ibptt = timeChange(ibpt,'UTC')
+#
+# svt0731,svd0731,ibpt0731,ibpd0731=waveMatch(svt03,svd03,ibt031,ibd03)
+# svt0804,svd0804,ibpt0804,ibpd0804=waveMatch(svt04,svd04,ibt041,ibd04)
+# svt0805,svd0805,ibpt0805,ibpd0805=waveMatch(svt05,svd05,ibt051,ibd05)
+# svt0806,svd0806,ibpt0806,ibpd0806=waveMatch(svt06,svd06,ibt061,ibd06)
+# svt0812,svd0812,ibpt0812,ibpd0812=waveMatch(svt07,svd07,ibt071,ibd07)
+#
+# svtime,svdata,ibptime,ibpdata=waveMatch(svt,svd,ibptt,ibpd)
+#
+# IBP0731={"0731IBPTIME":ibpt0731,"0731IBPDATA":ibpd0731}
+# IBP0804={"0804IBPTIME":ibpt0804,"0804IBPDATA":ibpd0804}
+# IBP0805={"0805IBPTIME":ibpt0805,"0805IBPDATA":ibpd0805}
+# IBP0806={"0806IBPTIME":ibpt0806,"0806IBPDATA":ibpd0806}
+# IBP0812={"0812IBPTIME":ibpt0812,"0812IBPDATA":ibpd0812}
+#
+# saveDic(IBP0731,"IBP0731")
+#
+# IBPDic={"TIME":ibptime,"DATA":ibpdata}
+#
+# # 데이터 전처리 후 아래부터는 DB 입력을 위한 작업
+#
+# testdb,cursor = dbIn()
+# IBP0731["0731IBPTIME"][0][0].year
+# IBP0731["0731IBPTIME"][0][0].month
+# IBP0731["0731IBPTIME"][0][0].day
+#
+#
+#
+#
+# #id,room_name,date,time,file_name,SV_value
+# sql="insert into SVtest_jy(room_name,date,time,file_name,SV_value) values(%s, %s, %s, %s,%s)"
+# dd,tt=splitTime(svt0731)
+# for i in range(len(svt0731)) :
+#     tempStr="/home/wlsdud1512/testNpz001/0731IBP" + str(i+1) +".npz"
+#     np.savez(tempStr,Time=IBP0731["0731IBPTIME"][i],Data=IBP0731["0731IBPDATA"]
