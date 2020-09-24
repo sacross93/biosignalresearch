@@ -34,12 +34,17 @@ def searchRoomAllFile(roomname):
     # print(roomInfo)
     file = []
     result = []
+    etc=['/mnt/Data/CloudStation/D-05/170714_080052.vital','/mnt/CloudStation/D-05/170714_080052.vital','/mnt/CloudStation/D-01/check_vital_pleth.py','/mnt/CloudStation/D-01/vital_reader.py']
+
+    for i in etc :
+        if i in roomInfo :
+            roomInfo.remove(i)
     while True:
         if roomInfo is None or not roomInfo:
             break
         else:
             temp = roomInfo.pop()
-            if temp == '/mnt/Data/CloudStation/D-05/170714_080052.vital' or temp == '/mnt/CloudStation/D-05/170714_080052.vital':
+            if temp in etc:
                 temp = roomInfo.pop()
             temp = search(temp)
             for i in range(len(temp)):
@@ -75,6 +80,7 @@ def searchDate(roomName,year, month=None, day=None):
                     vrfile.append(i)
             else :
                 vrfile.append(i)
+
     return vrfile
 
 def searchWaveform(data):
@@ -90,8 +96,11 @@ def findMachineInfo(target, machineName=None, machineName2=None):
     resultTime = []
     resultData = []
     num_cores = multiprocessing.cpu_count()
-    parResult = parmap.map(vr.VitalFile, target, pm_pbar=True, pm_processes=num_cores)
-    # parResult = parmap.map(vr.VitalFile, selfData,pm_pbar=True,pm_processes=num_cores)
+
+    # parResult = parmap.map(vr.VitalFile, target, pm_pbar=True, pm_processes=5)
+    with Pool(4) as p:
+        parResult = p.map(vr.VitalFile, target)
+
     tempDic={'machineName' : machineName,'machineName2':machineName2,'vrFile':parResult }
     print(parResult)
     # print(len(parResult))
@@ -320,9 +329,9 @@ def timeMatchData(time1, data1, time2, data2, btime=None):
                 # print("2")
                 resultTime1 = np.append(resultTime1, time1[i])
                 # print("3")
-                matchData2 = np.append(matchData2, data2[j])
+                matchData2 = np.append(matchData2, data2[tempValues])
                 # print("4")
-                resultTime2 = np.append(resultTime2, time2[j])
+                resultTime2 = np.append(resultTime2, time2[tempValues])
                 # print("5")
     # print("out")
     return resultTime1, matchData1, resultTime2, matchData2
@@ -505,10 +514,20 @@ def splitTime(time):
 
     return DBT,DBD
 
-# roomData=searchRoomAllFile("D-05")
+start = time.time()
+roomData=searchRoomAllFile("D-05")
 # print(len(roomData))
 # print(roomData)
-# D05room0731=searchDate(roomData,20,7,31)
+D05room08=searchDate(roomData,20,8)
+print("loadiong...")
+# a = vr.VitalFile(D01room0908[0])
+# b = vr.VitalFile(D01room0908[1])
+
+# print(time.time() - start)
+
+print(time.time() - start)
+
+# print(D05room0731)
 # D05room0804=searchDate(roomData,20,8,4)
 # D05room0805=searchDate(roomData,20,8,5)
 # D05room0806=searchDate(roomData,20,8,6)
@@ -572,6 +591,17 @@ def splitTime(time):
 #
 # IBPDic={"TIME":ibptime,"DATA":ibpdata}
 #
+
+IBPTime,IBPData=findMachineInfo(D05room08,None,'IBP1')
+SVTime,SVDATA=findMachineInfo(D05room08,'EV1000','SV')
+
+IBPTimeC = timeChange(IBPTime,'UTC')
+
+IBPStart=timeBinarySearch(IBPTimeC,datetime.datetime.timestamp(IBPTimeC[0]+datetime.timedelta(minutes=30)))
+IBPEnd=timeBinarySearch(IBPTimeC,datetime.datetime.timestamp(IBPTimeC[]))
+
+
+
 # # 데이터 전처리 후 아래부터는 DB 입력을 위한 작업
 #
 # testdb,cursor = dbIn()
