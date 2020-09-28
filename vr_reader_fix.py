@@ -164,6 +164,24 @@ class VitalFile:
         else:
             return None
 
+    def fix_find_track(self, dtname):
+        dname = None
+        tname = dtname
+        if dtname.find('/') != -1:
+            dname, tname = dtname.split('/')
+
+        for trk in self.trks.values():  # find event track
+            if trk['name'] == tname:
+                did = trk['did']
+                if did == 0 and not dname:
+                    return trk
+                if did in self.devs:
+                    dev = self.devs[did]
+                    if 'name' in dev and dname == dev['name']:
+                        return trk
+
+        return None
+
     def save_vital(self, ipath, compresslevel=1):
         f = gzip.GzipFile(ipath, 'wb', compresslevel=compresslevel)
 

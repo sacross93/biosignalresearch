@@ -410,7 +410,7 @@ def vital_recs(ipath, dtnames, interval=1):
     ret = []
     for dtname in dtnames:
         ret.append(vf.get_samples(dtname, interval))
-
+    print(ret)
     return np.transpose(ret)
 
 

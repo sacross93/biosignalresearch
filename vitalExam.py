@@ -45,23 +45,25 @@ def searchDateRoom(roomname,year,month=None,day=None) :
     roomDir=searchRoomAllFile(roomname)
     vrfile=[]
 
+    teststr = str(year)
+
+    if month != None :
+        if month // 10 == 0 :
+            teststr += str(0)+str(month)
+        else :
+            teststr += str(month)
+    if day != None :
+        if day // 10 == 0 :
+            teststr += str(0)+str(day)
+        else :
+            teststr += str(day)
+
+    teststr = teststr.replace("None", "")
+
     for i in roomDir :
-        if year < int(i[23:25]) :
-            break
-        if type(int(i[23:25]))== str or type(int(i[27:29])) == str or type(int(i[25:27])) == str :
-            continue
-        elif year == int(i[23:25]) :
-            if month != None and day != None :
-                if month == int(i[25:27]) and day == int(i[27:29]) :
-                    vrfile.append(i)
-            elif month != None and day == None :
-                if month == int(i[25:27]) :
-                    vrfile.append(i)
-            elif month == None and day != None :
-                if str(day) in int(i[27:29]) :
-                    vrfile.append(i)
-            else :
-                vrfile.append(i)
+        tempSplit=i.split('/')
+        if tempSplit[4].find(teststr) != -1:
+            vrfile.append(i)
 
     return vrfile
 
@@ -79,17 +81,17 @@ def findMachineInfo(target, machineName=None, machineName2=None):
     resultData = []
 
     with Pool(4) as p:
-        parResult = p.map(vital.VitalFile, target)
+        parResult = p.map(vr.VitalFile, target)
 
-    tempDic={'machineName' : machineName,'machineName2':machineName2,'vrFile':parResult }
+    tempDic={'machineName' : machineName ,'machineName2':machineName2,'vrFile':parResult }
     print(parResult)
     # print(len(parResult))
     for i in parResult:
         time, data = getData(i, machineName, machineName2)
         # print(data[0].shape)
         if time is not None or time != None :
-            resultTime=np.append(resultTime,time,axis=count)
-            resultData=np.append(resultData,data,axis=count)
+            resultTime=np.append(resultTime,time)
+            resultData=np.append(resultData,data)
             count+=1
 
     return resultTime, resultData
@@ -150,11 +152,23 @@ start = time.time()
 # print(len(roomData))
 # print(roomData)
 D01room0731=searchDateRoom("D-05",20,8)
+E07room0925=searchDateRoom("E-07",20,9,25)
+
+len(D01room0731)
+D01room0731
+
+a=vital.VitalFile(D01room0731[0])
+
+vital.load_trk(D01room0731[0])
+E07room0925[4]
+a=vr.VitalFile(E07room0925[4])
 
 # examFile=['/mnt/CloudStation/D-05/200731/D-05_200731_075952.vital', '/mnt/CloudStation/D-05/200731/D-05_200731_163300.vital']
 # a = vital.VitalFile(roomData[2058])
 
 ibpt,ibpd=findMachineInfo(D01room0731,None,'IBP1')
+
+len(ibpt)
 
 with Pool(4) as p :
     a=p.map(vr.VitalFile,D01room0731)

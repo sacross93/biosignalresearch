@@ -8,3 +8,22 @@ a = np.array(a).flatten().tolist()
 a= list(itertools.chain(*a))
 
 print(a[0])
+
+
+
+year=2008
+month=None
+day=None
+
+
+teststr=str(year)+str(month)+str(day)
+teststr=teststr.replace("None","")
+
+datastr=['/mnt/CloudStation/D-05/180801/D-05_180801_200812.vital', '/mnt/CloudStation/D-05/190401/D-05_190401_200855.vital']
+datastr
+a=datastr[0].split('/')
+datastr[1].split('/')
+
+a
+len(a)
+a[4]
