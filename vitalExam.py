@@ -154,21 +154,10 @@ start = time.time()
 D01room0731=searchDateRoom("D-05",20,8)
 E07room0925=searchDateRoom("E-07",20,9,25)
 
-len(D01room0731)
-D01room0731
-
-a=vital.VitalFile(D01room0731[0])
-
-vital.load_trk(D01room0731[0])
-E07room0925[4]
-a=vr.VitalFile(E07room0925[4])
 
 # examFile=['/mnt/CloudStation/D-05/200731/D-05_200731_075952.vital', '/mnt/CloudStation/D-05/200731/D-05_200731_163300.vital']
-# a = vital.VitalFile(roomData[2058])
 
-ibpt,ibpd=findMachineInfo(D01room0731,None,'IBP1')
 
-len(ibpt)
 
 with Pool(4) as p :
     a=p.map(vr.VitalFile,D01room0731)
@@ -176,17 +165,8 @@ with Pool(4) as p :
 with Pool(4) as p :
     aa=p.map(vital.vital_trks,D01room0731)
 
-aaa=vital.vital_recs(D01room0731[0],aa[0][0])
-
 with Pool(4) as p :
     b=p.map(vital.vital_trks,D01room0731)
-
-
-
-
-# with Pool(4) as p :
-#     c=p.map(vital.vital_recs,(D01room0731,d))
-
 
 
 print(time.time() - start)
