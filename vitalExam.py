@@ -151,8 +151,13 @@ start = time.time()
 
 # print(len(roomData))
 # print(roomData)
-D01room0731=searchDateRoom("D-05",20,8)
-E07room0925=searchDateRoom("E-07",20,9,25)
+# D01room0731=searchDateRoom("D-05",20,8)
+# E07room0925=searchDateRoom("E-07",20,9,25)
+D05room0930=searchDateRoom("D-05",20,9,30)
+
+a=vr.VitalFile(D05room0930[0])
+b=a.vital_trks()
+c=a.fix_get_samples(b[1])
 
 
 # examFile=['/mnt/CloudStation/D-05/200731/D-05_200731_075952.vital', '/mnt/CloudStation/D-05/200731/D-05_200731_163300.vital']

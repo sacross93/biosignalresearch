@@ -178,6 +178,82 @@ class VitalFile:
             ret.append(dname + '/' + tname)
         return ret
 
+    def fix_find_track(self, dtname):
+        dname = None
+        tname = dtname
+        if dtname.find('/') != -1:
+            dname, tname = dtname.split('/')
+
+        for trk in self.trks.values():  # find event track
+            if trk['name'] == tname:
+                did = trk['did']
+                if did == 0 and not dname:
+                    return trk
+                if did in self.devs:
+                    dev = self.devs[did]
+                    if 'name' in dev and dname == dev['name']:
+                        return trk
+
+        return None
+
+    def fix_get_samples(self, dtname, interval=1):
+        if not interval:
+            print("interval is None")
+            return None
+
+        trk = self.fix_find_track(dtname)
+        if not trk:
+            print("trk is None")
+            return None
+
+        # 리턴 할 길이
+        nret = int(np.ceil((self.dtend - self.dtstart) / interval))
+
+        srate = trk['srate']
+        if srate == 0:  # numeric track
+            ret = np.full(nret, np.nan)  # create a dense array
+            for rec in trk['recs']:  # copy values
+                idx = int((rec['dt'] - self.dtstart) / interval)
+                if idx < 0:
+                    idx = 0
+                elif idx > nret:
+                    idx = nret
+                ret[idx] = rec['val']
+            return ret
+        else:  # wave track
+            recs = trk['recs']
+
+            # 자신의 srate 만큼 공간을 미리 확보
+            nsamp = int(np.ceil((self.dtend - self.dtstart) * srate))
+            ret = np.full(nsamp, np.nan)
+
+            # 실제 샘플을 가져와 채움
+            for rec in recs:
+                sidx = int(np.ceil((rec['dt'] - self.dtstart) * srate))
+                eidx = sidx + len(rec['val'])
+                srecidx = 0
+                erecidx = len(rec['val'])
+                if sidx < 0:  # self.dtstart 이전이면
+                    srecidx -= sidx
+                    sidx = 0
+                if eidx > nsamp:  # self.dtend 이후이면
+                    erecidx -= (eidx - nsamp)
+                    eidx = nsamp
+                ret[sidx:eidx] = rec['val'][srecidx:erecidx]
+
+            # gain offset 변환
+            ret *= trk['gain']
+            ret += trk['offset']
+
+            # 리샘플 변환
+            if srate != int(1 / interval + 0.5):
+                ret = np.take(ret, np.linspace(0, nsamp - 1, nret).astype(np.int64))
+
+            return ret
+
+        print("is None")
+        return None
+
     def save_vital(self, ipath, compresslevel=1):
         f = gzip.GzipFile(ipath, 'wb', compresslevel=compresslevel)
 
@@ -231,6 +307,10 @@ class VitalFile:
         return True
 
     def load_vital(self, ipath, sels=None):
+        # self.devs = {0: {}}  # device names. did = 0 represents the vital recorder
+        # self.trks = {}
+        # self.dtstart = 4000000000  # 2100
+        # self.dtend = 0
         f = gzip.GzipFile(ipath, 'rb')
 
         # parse header
