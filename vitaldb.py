@@ -53,7 +53,7 @@ def parse_fmt(fmt):
 
 class VitalFile:
     def __init__(self, ipath, sels=None):
-        self.load_vital(ipath, sels)
+        self.fix_load_vital(ipath, sels)
 
     def crop(self, ):
         pass
@@ -115,6 +115,67 @@ class VitalFile:
 
         print("is None")
         return None
+
+    def fix_get_samples(self, dtname, dtstart=None, dtend=None):
+        dname = None
+        tname = dtname
+        if dtname.find('/') != -1:
+            dname, tname = dtname.split('/')
+
+        trk = self.find_track(dtname)
+        if not trk:
+            return None,None
+        srate = trk['srate']
+        if srate == 0:
+            return None,None
+        recs = trk['recs']
+        if dtstart is None:
+            dtstart = recs[0]['dt']
+        if dtend is None:
+            dtend = recs[-1]['dt'] + len(recs[-1]['val']) / srate
+
+        nsamp = int(np.ceil((dtend - dtstart) * srate))
+        ret = np.empty((nsamp, ), np.float32)
+        ret_time = np.empty((nsamp,), np.float64)
+        ret.fill(np.nan)
+        ret_time.fill(np.nan)
+
+        #print(ret_time)
+
+        # 실제 샘플을 가져와 채움
+        for rec in recs:
+            sidx = int(np.ceil((rec['dt'] - dtstart) * srate))
+            eidx = sidx + len(rec['val'])
+            srecidx = 0
+            erecidx = len(rec['val'])
+            if sidx < 0:  # dtstart 이전이면
+                srecidx -= sidx
+                sidx = 0
+            if eidx > nsamp:  # dtend 이후이면
+                erecidx -= (eidx - nsamp)
+                eidx = nsamp
+
+            for cnt in range(sidx,eidx):
+                ret_time[cnt] = rec['dt']+((cnt-sidx)/srate)
+                #print(rec['dt']+((sidx+cnt)/srate))
+            ret[sidx:eidx] = rec['val'][srecidx:erecidx]
+
+            #print(rec['dt'])
+            #print(sidx)
+            #print(rec['dt']+(sidx+cnt)/srate)
+            #print('sidx :',sidx)
+            #print('eidx :',eidx)
+
+        # gain offset 변환
+        ret *= trk['gain']
+        ret += trk['offset']
+        #ret_time *= trk['gain']
+        #ret_time += trk['offset']
+
+        ret = ret[np.logical_not(np.isnan(ret))]
+        ret_time = ret_time[np.logical_not(np.isnan(ret_time))]
+
+        return ret_time , ret
 
     def find_track(self, dtname):
         dname = None
@@ -182,6 +243,146 @@ class VitalFile:
             cdata = pack_b(5) + pack_w(len(self.trkorder)) + self.trkorder.tobytes()
             if not f.write(pack_b(6) + pack_dw(len(cdata)) + cdata):
                 return False
+
+        f.close()
+        return True
+
+    def fix_load_vital(self, ipath, sels=None):
+        self.devs = {0: {}}  # device names. did = 0 represents the vital recorder
+        self.trks = {}
+        self.dtstart = 4000000000  # 2100
+        self.dtend = 0
+        f = gzip.GzipFile(ipath, 'rb')
+
+        # parse header
+        if f.read(4) != b'VITA':  # check sign
+            return False
+
+        f.read(4)  # version
+        buf = f.read(2)
+        if buf == b'':
+            return False
+
+        headerlen = unpack_w(buf, 0)[0]
+        self.header = f.read(headerlen)  # skip header
+
+        # parse body
+        self.devs = {0: {}}  # # device names. did = 0 represents vital recorder
+        self.trks = {}
+        try:
+            selids = set()
+            while True:
+                buf = f.read(5)
+                if buf == b'':
+                    break
+                pos = 0
+
+                type = unpack_b(buf, pos)[0];
+                pos += 1
+                datalen = unpack_dw(buf, pos)[0];
+                pos += 4
+
+                buf = f.read(datalen)
+                if buf == b'':
+                    break
+                pos = 0
+
+                if type == 9:  # devinfo
+                    did = unpack_dw(buf, pos)[0];
+                    pos += 4
+                    type, pos = unpack_str(buf, pos)
+                    name, pos = unpack_str(buf, pos)
+                    port, pos = unpack_str(buf, pos)
+                    self.devs[did] = {'name': name, 'type': type, 'port': port}
+                elif type == 0:  # trkinfo
+                    tid = unpack_w(buf, pos)[0];
+                    pos += 2
+                    type = unpack_b(buf, pos)[0];
+                    pos += 1
+                    fmt = unpack_b(buf, pos)[0];
+                    pos += 1
+                    name, pos = unpack_str(buf, pos)
+                    if sels is not None and name not in sels:
+                        continue
+                    selids.add(tid)
+
+                    if sels:
+                        sels.remove(name)
+
+                    unit, pos = unpack_str(buf, pos);
+                    mindisp = unpack_f(buf, pos)[0];
+                    pos += 4
+                    maxdisp = unpack_f(buf, pos)[0];
+                    pos += 4
+                    col = unpack_dw(buf, pos)[0];
+                    pos += 4
+                    srate = unpack_f(buf, pos)[0];
+                    pos += 4
+                    gain = unpack_d(buf, pos)[0];
+                    pos += 8
+                    offset = unpack_d(buf, pos)[0];
+                    pos += 8
+                    montype = unpack_b(buf, pos)[0];
+                    pos += 1
+                    did = unpack_dw(buf, pos)[0];
+                    pos += 4
+                    if did not in self.devs:
+                        continue
+                    self.trks[tid] = {'name': name, 'type': type, 'fmt': fmt, 'unit': unit, 'srate': srate,
+                                      'mindisp': mindisp, 'maxdisp': maxdisp, 'col': col, 'montype': montype,
+                                      'gain': gain, 'offset': offset, 'did': did, 'recs': []}
+                elif type == 1:  # rec
+                    infolen = unpack_w(buf, pos)[0];
+                    pos += 2
+                    dt = unpack_d(buf, pos)[0];
+                    pos += 8
+                    tid = unpack_w(buf, pos)[0];
+                    pos += 2
+                    pos = 2 + infolen
+                    if tid not in self.trks:
+                        continue
+                    trk = self.trks[tid]
+                    if tid not in selids:
+                        continue
+
+                    fmtlen = 4
+                    # gain, offset 변환은 하지 않은 raw data 상태로만 로딩한다.
+                    # 항상 이 변환이 필요하지 않기 때문에 변환은 get_samples 에서 나중에 한다.
+                    if trk['type'] == 1:  # wav
+                        fmtcode, fmtlen = parse_fmt(trk['fmt'])
+                        nsamp = unpack_dw(buf, pos)[0];
+                        pos += 4
+                        samps = np.ndarray((nsamp,), buffer=buf, offset=pos, dtype=np.dtype(fmtcode));
+                        pos += nsamp * fmtlen
+                        trk['recs'].append({'dt': dt, 'val': samps})
+                    elif trk['type'] == 2:  # num
+                        fmtcode, fmtlen = parse_fmt(trk['fmt'])
+                        val = unpack_from(fmtcode, buf, pos)[0];
+                        pos += fmtlen
+                        trk['recs'].append({'dt': dt, 'val': val})
+                    elif trk['type'] == 5:  # str
+                        pos += 4  # skip
+                        str, pos = unpack_str(buf, pos)
+                        trk['recs'].append({'dt': dt, 'val': str})
+                elif type == 6:  # cmd
+                    cmd = unpack_b(buf, pos)[0];
+                    pos += 1
+                    if cmd == 6:  # reset events
+                        evt_trk = self.find_track('EVENT', '')
+                        if evt_trk:
+                            evt_trk['recs'] = []
+                    elif cmd == 5:  # trk order
+                        cnt = unpack_w(buf, pos)[0];
+                        pos += 2
+                        self.trkorder = np.ndarray((cnt,), buffer=buf, offset=pos, dtype=np.dtype('H'));
+                        pos += cnt * 2
+
+        except EOFError:
+            pass
+
+        # sorting tracks
+        for trk in self.trks.values():
+            trk['recs'].sort(key=lambda r: r['dt'])
 
         f.close()
         return True

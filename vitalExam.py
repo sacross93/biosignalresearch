@@ -155,9 +155,15 @@ start = time.time()
 # E07room0925=searchDateRoom("E-07",20,9,25)
 D05room0930=searchDateRoom("D-05",20,9,30)
 
-a=vr.VitalFile(D05room0930[0])
-b=a.vital_trks()
-c=a.fix_get_samples(b[1])
+# a=vital.VitalFile(D05room0930[0])
+# # b=vital.vital_trks(D05room0930[0])
+# temp='DI-1120/VOLT'
+# # c=a.find_track(b[1])
+# htime,hdate=a.fix_get_samples(temp)
+# print(time.time() - start)
+
+htime,hdata=findMachineInfo(D05room0930,"None","VOLT")
+print(time.time() - start)
 
 
 # examFile=['/mnt/CloudStation/D-05/200731/D-05_200731_075952.vital', '/mnt/CloudStation/D-05/200731/D-05_200731_163300.vital']
