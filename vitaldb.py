@@ -116,11 +116,30 @@ class VitalFile:
         print("is None")
         return None
 
+    def trks_name(self):
+        ret = []
+        for trk in self.trks.values():
+            tname = trk['name']
+            dname = ''
+            did = trk['did']
+            if did in self.devs:
+                dev = self.devs[did]
+                if 'name' in dev:
+                    dname = dev['name']
+            ret.append(dname + '/' + tname)
+        return ret
+
     def fix_get_samples(self, dtname, dtstart=None, dtend=None):
+        temp = self.trks_name()
         dname = None
         tname = dtname
         if dtname.find('/') != -1:
             dname, tname = dtname.split('/')
+
+        # for i in temp :
+        #     if dname == None :
+        #
+
 
         trk = self.find_track(dtname)
         if not trk:

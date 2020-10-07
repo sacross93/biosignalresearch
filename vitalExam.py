@@ -9,8 +9,8 @@ import vr_reader_fix as vr
 
 def search(dirname):
     full_filename = []
-    addressTemp = ("/mnt/CloudStation/")
-    if dirname.find("/mnt/CloudStation/") == -1 :
+    addressTemp = ("/mnt/Data/CloudStation/")
+    if dirname.find("/mnt/Data/CloudStation/") == -1 :
         dirname = addressTemp + dirname
 
     filenames = os.listdir(dirname)
@@ -22,10 +22,10 @@ def search(dirname):
 def searchRoomAllFile(roomname):
     roomInfo = search(roomname)
     # print(roomInfo)
-    etc=['/mnt/Data/CloudStation/D-05/170714_080052.vital','/mnt/CloudStation/D-05/170714_080052.vital','/mnt/CloudStation/D-01/check_vital_pleth.py','/mnt/CloudStation/D-01/vital_reader.py']
-
+    etc=['/mnt/Data/CloudStation/D-05/170714_080052.vital','/mnt/Data/CloudStation/D-05/170714_080052.vital','/mnt/Data/CloudStation/D-01/check_vital_pleth.py','/mnt/Data/CloudStation/D-01/vital_reader.py']
     for i in etc :
         if i in roomInfo :
+            # print("delete : ",i)
             roomInfo.remove(i)
 
     with Pool(4) as p :
@@ -62,7 +62,7 @@ def searchDateRoom(roomname,year,month=None,day=None) :
 
     for i in roomDir :
         tempSplit=i.split('/')
-        if tempSplit[4].find(teststr) != -1:
+        if tempSplit[5].find(teststr) != -1:
             vrfile.append(i)
 
     return vrfile
@@ -154,16 +154,16 @@ start = time.time()
 # D01room0731=searchDateRoom("D-05",20,8)
 # E07room0925=searchDateRoom("E-07",20,9,25)
 D05room0930=searchDateRoom("D-05",20,9,30)
-
 # a=vital.VitalFile(D05room0930[0])
-# # b=vital.vital_trks(D05room0930[0])
+# # # b=vital.vital_trks(D05room0930[0])
 # temp='DI-1120/VOLT'
-# # c=a.find_track(b[1])
+# # # # c=a.find_track(b[1])
 # htime,hdate=a.fix_get_samples(temp)
 # print(time.time() - start)
 
-htime,hdata=findMachineInfo(D05room0930,"None","VOLT")
+htime,hdata=findMachineInfo(D05room0930,None,"VOLT")
 print(time.time() - start)
+
 
 
 # examFile=['/mnt/CloudStation/D-05/200731/D-05_200731_075952.vital', '/mnt/CloudStation/D-05/200731/D-05_200731_163300.vital']
