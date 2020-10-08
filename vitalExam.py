@@ -153,15 +153,15 @@ start = time.time()
 # print(roomData)
 # D01room0731=searchDateRoom("D-05",20,8)
 # E07room0925=searchDateRoom("E-07",20,9,25)
-D05room0930=searchDateRoom("D-05",20,9,30)
-# a=vital.VitalFile(D05room0930[0])
-# # # b=vital.vital_trks(D05room0930[0])
-# temp='DI-1120/VOLT'
-# # # # c=a.find_track(b[1])
+D05room0930=searchDateRoom("D-01",20,9,24)
+# a=vital.VitalFile(D05room0930[1])
+# b=vital.vital_trks(D05room0930[1])
+# temp='heart_sound/AUDIO'
+# c=a.find_track(b[1])
 # htime,hdate=a.fix_get_samples(temp)
 # print(time.time() - start)
 
-htime,hdata=findMachineInfo(D05room0930,None,"VOLT")
+htime,hdata=findMachineInfo(D05room0930,None,"AUDIO")
 print(time.time() - start)
 
 
