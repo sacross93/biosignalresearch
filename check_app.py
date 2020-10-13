@@ -546,66 +546,92 @@ def testDb(svtime,svdata,ibpDic) :
         db.commit()
 #end DB process
 
+#-------------------------------------------
+#E-07
 
+E07=searchDateRoom("E-07",20,10,12)
 
-start = time.time()
+adt,add=findMachineInfo(E07,None,"AUDIO")
 
-D01room0826=searchDateRoom("D-01",20,8,26)
-print("loadiong...")
+adt=timeChange(adt,"UTC")
 
-adt,add=findMachineInfo(D01room0826,None,"AUDIO")
+startTime=datetime.datetime(2020,10,12,11,30)
+startTime=datetime.datetime.timestamp(startTime)
 
-adt = timeChange(adt,"UTC")
+endTime=datetime.datetime(2020,10,12,11,40)
+endTime=datetime.datetime.timestamp(endTime)
 
-tempTime=datetime.datetime(2020,8,26,9,33,40)
-tempTime=datetime.datetime.timestamp(tempTime)
+aa=timeBinarySearch(adt,startTime)
+bb=timeBinarySearch(adt,endTime)
 
-tempTime2=datetime.datetime(2020,8,26,9,33,50)
-tempTime2=datetime.datetime.timestamp(tempTime2)
-
-startTime=timeBinarySearch(adt,tempTime)
-endTime=timeBinarySearch(adt,tempTime2)
-
-tempadt=adt[startTime:endTime]
-tempadd=add[startTime:endTime]
-
-
-#interpid scipy
-
-plot(tempadt,tempadd)
-
-x=np.linspoace(0)
-
-# tempadt[0]
-# tempadt[3827]
-# tempadt[3827+3875]
-# tempadt[3827+3875+3879]
-
-b,a=butter_bandpass_filter(tempadd,15,100,4000)
+tempadt=adt[aa:bb]
+tempadd=add[aa:bb]
 
 
 
+dd = np.zeros(np.size(tempadt))
+for i in range(np.size(tempadt)):
+    dd[i] = datetime.datetime.timestamp(tempadt[i])
+
+for j in range(30) :
+    count = 0
+    count2 = 0
+    a = datetime.datetime(2020, 10, 12, 11, 38, 10+j).timestamp()
+    b = datetime.datetime(2020, 10, 12, 13, 38, 10+j+1).timestamp()
+    temp=float(0.0)
+
+    ind = np.where((dd>=a)&(dd<b))[0]
+    print(len(ind))
+
+for i in range(1, len(ind)):
+    if dd[ind[i]]-dd[ind[i-1]] < 0.0002:
+        print(dd[ind[i]], dd[ind[i]]-dd[ind[i-1]])
+
+plt.plot(dd[ind[1]:ind[-1]]-dd[ind[0]:ind[-2]])
+plt.show()
+
+#------------------------------------------------------------
+#D-01
 
 
+D01=searchDateRoom("D-01",20,10,12)
+
+adt,add=findMachineInfo(D01,None,"AUDIO")
+adt=timeChange(adt,"UTC")
+
+startTime=datetime.datetime(2020,10,12,13,53)
+startTime=datetime.datetime.timestamp(startTime)
+
+endTime=datetime.datetime(2020,10,12,13,54)
+endTime=datetime.datetime.timestamp(endTime)
+
+aa=timeBinarySearch(adt,startTime)
+bb=timeBinarySearch(adt,endTime)
+
+tempadt=adt[aa:bb]
+tempadd=add[aa:bb]
 
 
+dd = np.zeros(np.size(tempadt))
+for i in range(np.size(tempadt)):
+    dd[i] = datetime.datetime.timestamp(tempadt[i])
+
+for j in range(30) :
+    count = 0
+    count2 = 0
+    a = datetime.datetime(2020, 10, 12, 13, 53, 10+j).timestamp()
+    b = datetime.datetime(2020, 10, 12, 13, 53, 10+j+1).timestamp()
+    temp=float(0.0)
+
+    ind = np.where((dd>=a)&(dd<b))[0]
+    print(len(ind))
+
+for i in range(1, len(ind)):
+    if dd[ind[i]]-dd[ind[i-1]] < 0.0002:
+        print(dd[ind[i]], dd[ind[i]]-dd[ind[i-1]])
+
+plt.plot(dd[ind[1]:ind[-1]]-dd[ind[0]:ind[-2]])
+plt.show()
 
 
-# # 데이터 전처리 후 아래부터는 DB 입력을 위한 작업
-#
-# testdb,cursor = dbIn()
-# IBP0731["0731IBPTIME"][0][0].year
-# IBP0731["0731IBPTIME"][0][0].month
-# IBP0731["0731IBPTIME"][0][0].day
-#
-#
-#
-#
-# #id,room_name,date,time,file_name,SV_value
-# sql="insert into SVtest_jy(room_name,date,time,file_name,SV_value) values(%s, %s, %s, %s,%s)"
-# dd,tt=splitTime(svt0731)
-# for i in range(len(svt0731)) :
-#     tempStr="/home/wlsdud1512/testNpz001/0731IBP" + str(i+1) +".npz"
-#     np.savez(tempStr,Time=IBP0731["0731IBPTIME"][i],Data=IBP0731["0731IBPDATA"]
-
-print(time.time() - start)
+# ------------------------------------------------------
