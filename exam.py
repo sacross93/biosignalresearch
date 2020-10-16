@@ -17,7 +17,7 @@ import copy
 import scipy.stats as stats
 import pylab
 import pickle
-from scipy.signal import butter, lfilter, hilbert, chirp
+from scipy.signal import butter, lfilter, hilbert, chirp ,find_peaks
 from scipy import signal
 from scipy.interpolate import interp1d
 
@@ -126,6 +126,8 @@ def getData(vrfile, machineName=None, machineName2=None):
     # print(machineName2)
     Dtime = []
     Ddata = []
+
+    dtname=vrfile.vital_trks()
     for trk in vrfile.trks.values():
         # count += 1
         # print(count)
@@ -231,7 +233,7 @@ def plot(time, data):
     plt.subplot(1,2,1)
     plt.plot(newTime, newData)
     plt.axhline(y=statistics(newData, 'average'), color='r', linewidth=1)
-    peaks, _ = signal.find_peaks(data,prominence=1)
+    peaks, _ = find_peaks(data,distance=4000,threshold=0.8)
     plt.subplot(1,2,2)
     plt.plot(peaks,data[peaks],"xr")
     plt.plot(data)
@@ -483,8 +485,7 @@ def butter_bandpass_filter(data,lowcut,highcut,fs,order=5) :
     print("filter start")
     b, a = butter_bandpass(lowcut,highcut,fs,order=order)
     print("bandpass...")
-    y = lfilter(b,a,data)
-    return y
+    return lfilter(b,a,data)
 
 def notch_pass_filter(data,center,interval=20,sr=44100,normalized=False) :
     center = center/(sr/2) if normalized else center
@@ -572,22 +573,60 @@ tempadd=add[startTime:endTime]
 
 #interpid scipy
 
-plot(tempadt,tempadd)
 
-x=np.linspoace(0)
+#--------------------------------------
+#band pass fillter
 
-# tempadt[0]
-# tempadt[3827]
-# tempadt[3827+3875]
-# tempadt[3827+3875+3879]
+b=butter_bandpass_filter(tempadd,300,1900,4000)
+bb=butter_bandpass_filter(tempadd,10,100,4000)
 
-b,a=butter_bandpass_filter(tempadd,15,100,4000)
+# plt.figure(figsize=(20, 10))
+# plt.plot(tempadd[25000:30000])
+# plt.show()
+#
+# plt.figure(figsize=(20, 10))
+# plt.plot(tempadd[25000:30000])
+# plt.plot(b[25000:30000])
+# plt.plot(bb[25000:30000])
+# plt.show()
+#
+# plt.close()
 
+t=np.arange(1*4000)/4000
+analytic_signal = hilbert(bb)
+amplitude_envelope = np.abs(analytic_signal)
 
+instantaneous_phase = np.unwrap(np.angle(analytic_signal))
+instantaneous_frequency=(np.diff(instantaneous_phase) / (2.0*np.pi) * 4000 )
 
+fig=plt.figure(figsize=(20,10))
+ax0=fig.add_subplot(211)
+ax0.plot(t,bb[2000:6000],label='signal')
+ax0.plot(t,amplitude_envelope[2000:6000],label='envelope')
+ax0.legend()
 
+ax1=fig.add_subplot(212)
+ax1.plot(t,instantaneous_frequency[2000:6000])
+ax1.set_xlabel("time in seconds")
+ax1.set_ylim(0.0,150.0)
+plt.show()
 
+plt.figure(figsize=(20,10))
+peaks, _ = find_peaks(bb, distance=1000,threshold=0.8,prominence=1)
+plt.plot(bb)
+plt.plot(peaks,bb[peaks],"x")
+plt.show()
+plt.close()
 
+fig=plt.figure(figsize=(20,10))
+ax0=fig.add_subplot(211)
+ax0.plot(t,bb[2000:6000],label='signal')
+ax0.plot(t,amplitude_envelope[2000:6000],label='envelgope')
+ax0.legend()
+ax1=fig.add_subplot(212)
+ax1.plot(bb)
+ax1.plot(peaks,bb[peaks],"x",label="peak")
+plt.show()
 
 
 

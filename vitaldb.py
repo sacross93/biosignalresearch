@@ -53,7 +53,7 @@ def parse_fmt(fmt):
 
 class VitalFile:
     def __init__(self, ipath, sels=None):
-        self.fix_load_vital(ipath, sels)
+        self.load_vital(ipath, sels)
 
     def crop(self, ):
         pass
@@ -74,6 +74,7 @@ class VitalFile:
         srate = trk['srate']
         if srate == 0:  # numeric track
             ret = np.full(nret, np.nan)  # create a dense array
+            tret = np.full(nret,  np.nan)
             for rec in trk['recs']:  # copy values
                 idx = int((rec['dt'] - self.dtstart) / interval)
                 if idx < 0:
@@ -81,6 +82,7 @@ class VitalFile:
                 elif idx > nret:
                     idx = nret
                 ret[idx] = rec['val']
+                tret[idx] = rec['dt']
             return ret
         else:  # wave track
             recs = trk['recs']
@@ -88,7 +90,7 @@ class VitalFile:
             # 자신의 srate 만큼 공간을 미리 확보
             nsamp = int(np.ceil((self.dtend - self.dtstart) * srate))
             ret = np.full(nsamp, np.nan)
-
+            tret = np.full(nsamp, np.nan)
             # 실제 샘플을 가져와 채움
             for rec in recs:
                 sidx = int(np.ceil((rec['dt'] - self.dtstart) * srate))
@@ -102,6 +104,7 @@ class VitalFile:
                     erecidx -= (eidx - nsamp)
                     eidx = nsamp
                 ret[sidx:eidx] = rec['val'][srecidx:erecidx]
+                tret[sidx:eidx] = rec['dt'][srecidx:erecidx]
 
             # gain offset 변환
             ret *= trk['gain']
@@ -111,7 +114,10 @@ class VitalFile:
             if srate != int(1 / interval + 0.5):
                 ret = np.take(ret, np.linspace(0, nsamp - 1, nret).astype(np.int64))
 
-            return ret
+            tret = tret[np.isfinite(tret)]
+            ret = ret[np.isfinite(ret)]
+
+            return tret,ret
 
         print("is None")
         return None
