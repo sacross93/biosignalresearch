@@ -91,27 +91,35 @@ def searchWaveform(data):
         return False
 
 def findMachineInfo(target, machineName=None, machineName2=None):
-    print(type(target))
+    # print("target type is : ",type(target))
     # count = 0
     # selfData=['/mnt/CloudStation/F-08/200810/F-08_200810_080534.vital', '/mnt/CloudStation/F-08/200810/F-08_200810_104015.vital']
     resultTime = []
     resultData = []
     num_cores = multiprocessing.cpu_count()
-
     # parResult = parmap.map(vr.VitalFile, target, pm_pbar=True, pm_processes=5)
-    with Pool(4) as p:
-        parResult = p.map(vr.VitalFile, target)
+    if type(target) is type("s") :
+        parResult = vr.VitalFile(target)
+    else :
+        with Pool(4) as p:
+            parResult = p.map(vr.VitalFile, target)
 
     tempDic={'machineName' : machineName,'machineName2':machineName2,'vrFile':parResult }
     print(parResult)
     # print(len(parResult))
-    for i in parResult:
-        time, data = getData(i, machineName, machineName2)
-        # print(data[0].shape)
-        if time is not None or time != None :
-            resultTime=np.append(resultTime,time)
-            resultData=np.append(resultData,data)
-    #     count+=1
+    if type(parResult) is list([1,2]) :
+        for i in parResult:
+            time, data = getData(i, machineName, machineName2)
+            # print(data[0].shape)
+            if time is not None or time != None :
+                resultTime=np.append(resultTime,time)
+                resultData=np.append(resultData,data)
+        #     count+=1
+    else :
+        time , data = getData(parResult,machineName,machineName2)
+        if time is not None or time != None:
+            resultTime = np.append(resultTime, time)
+            resultData = np.append(resultData, data)
 
     return resultTime, resultData
 
@@ -321,33 +329,6 @@ def waveMatch(time1, data1, time2, data2) :
 
     return checkSvTime , checkSvData , tenIbpTime , tenIbpData
 
-def timeMatchData(time1, data1, time2, data2, btime=None):
-    resultTime1 = np.array([])
-    resultTime2 = np.array([])
-    matchData1 = np.array([])
-    matchData2 = np.array([])
-    matchtime = time1[0].second % 10
-    for i in range(len(time1)):
-        # print("for")
-        if time1[i].second % 10 == matchtime:
-            # print("if")
-            tempValues = timeBinarySearch(time2, time1[i])
-            # print("if2")
-            if tempValues is not -1:
-                # print(j)
-                # print(len(data2))
-                # print("1")
-                matchData1 = np.append(matchData1, data1[i])
-                # print("2")
-                resultTime1 = np.append(resultTime1, time1[i])
-                # print("3")
-                matchData2 = np.append(matchData2, data2[tempValues])
-                # print("4")
-                resultTime2 = np.append(resultTime2, time2[tempValues])
-                # print("5")
-    # print("out")
-    return resultTime1, matchData1, resultTime2, matchData2
-
 def timeBinarySearch(time,target) :
     low=0
     high=len(time)-1
@@ -370,80 +351,11 @@ def timeBinarySearch(time,target) :
             break
     # print(mid)
     if mid == 0 or mid == len(time):
+        print("search fail")
         return -1
     else :
         return mid
 
-def timeSeach(time,data,startTime,endTime) :
-    # starttime 105545 endtime 105630
-    minSecond=startTime%100
-    # print(minSecond)
-    minMinute=((startTime-minSecond)%10000)//100
-    # print(minMinute)
-    minHour=(startTime-minSecond-minMinute)//10000
-    # print(minHour)
-    target = datetime.datetime(time[0].year,time[0].month,time[0].day, minHour, minMinute, minSecond)
-    target = datetime.datetime.timestamp(target)
-    minTime = timeBinarySearch(time,target)
-
-    maxSecond=endTime%100
-    maxMinute=((endTime-maxSecond)%10000)//100
-    maxHour=(endTime-maxSecond-maxMinute)//10000
-    target = datetime.datetime(time[0].year,time[0].month,time[0].day,maxHour,maxMinute, maxSecond)
-    target = datetime.datetime.timestamp(target)
-    maxTime = timeBinarySearch(time,target)
-
-    print(minTime)
-    print(maxTime)
-    resultTime = np.array([])
-    matchData = np.array([])
-    if minTime == -1 or maxTime == -1 :
-        print("search break")
-        return resultTime,matchData
-
-    matchData = np.array(data[minTime:maxTime])
-    matchData=np.ravel(matchData,order='c')
-    resultTime = np.array(time[minTime:maxTime])
-    print(resultTime.shape)
-    resultTime=np.ravel(resultTime,order='c')
-    print("finish")
-
-    return resultTime, matchData
-
-def binaryGoodTime(time,data,beforTime,t_hour=None,t_minute=None,t_second=0) :
-    for i in range(beforTime) :
-        target = datetime.datetime(time[0].year,time[0].month,time[0].day, t_hour, t_minute, t_second)
-        # print(type(target))
-        target = datetime.datetime.timestamp(target - datetime.timedelta(minutes=beforTime + i))
-        minTime = timeBinarySearch(time,target)
-        if minTime != -1 :
-            break
-    for i in range(beforTime) :
-        target = datetime.datetime(time[0].year,time[0].month,time[0].day,t_hour,t_minute, t_second)
-        # print(type(target))
-        target = datetime.datetime.timestamp(target + datetime.timedelta(minutes=beforTime - i ))
-        maxTime = timeBinarySearch(time,target)
-        if maxTime != -1 :
-            break
-    print(minTime)
-    print(maxTime)
-    resultTime = np.array([])
-    matchData = np.array([])
-    if minTime == -1 or maxTime == -1 :
-        print("search break")
-        return resultTime,matchData
-    if time[minTime].hour > t_hour :
-        print("hour break")
-        return resultTime,matchData
-
-    matchData = np.array(data[minTime:maxTime])
-    matchData=np.ravel(matchData,order='c')
-    resultTime = np.array(time[minTime:maxTime])
-    print(resultTime.shape)
-    resultTime=np.ravel(resultTime,order='c')
-    print("finish")
-
-    return resultTime, matchData
 
 def splitTime(time):
     DBT = []
@@ -547,109 +459,3 @@ def testDb(svtime,svdata,ibpDic) :
         cursor.execute(tempSql, tempDataSet)
         db.commit()
 #end DB process
-
-
-
-start = time.time()
-
-D01room0826=searchDateRoom("D-01",20,8,26)
-print("loadiong...")
-
-adt,add=findMachineInfo(D01room0826,None,"AUDIO")
-
-adt = timeChange(adt,"UTC")
-
-tempTime=datetime.datetime(2020,8,26,9,33,40)
-tempTime=datetime.datetime.timestamp(tempTime)
-
-tempTime2=datetime.datetime(2020,8,26,9,33,50)
-tempTime2=datetime.datetime.timestamp(tempTime2)
-
-startTime=timeBinarySearch(adt,tempTime)
-endTime=timeBinarySearch(adt,tempTime2)
-
-tempadt=adt[startTime:endTime]
-tempadd=add[startTime:endTime]
-
-#interpid scipy
-
-
-#--------------------------------------
-#band pass fillter
-
-b=butter_bandpass_filter(tempadd,300,1900,4000)
-bb=butter_bandpass_filter(tempadd,10,100,4000)
-
-# plt.figure(figsize=(20, 10))
-# plt.plot(tempadd[25000:30000])
-# plt.show()
-#
-# plt.figure(figsize=(20, 10))
-# plt.plot(tempadd[25000:30000])
-# plt.plot(b[25000:30000])
-# plt.plot(bb[25000:30000])
-# plt.show()
-#
-# plt.close()
-
-t=np.arange(1*4000)/4000
-analytic_signal = hilbert(bb)
-amplitude_envelope = np.abs(analytic_signal)
-
-instantaneous_phase = np.unwrap(np.angle(analytic_signal))
-instantaneous_frequency=(np.diff(instantaneous_phase) / (2.0*np.pi) * 4000 )
-
-fig=plt.figure(figsize=(20,10))
-ax0=fig.add_subplot(211)
-ax0.plot(t,bb[2000:6000],label='signal')
-ax0.plot(t,amplitude_envelope[2000:6000],label='envelope')
-ax0.legend()
-
-ax1=fig.add_subplot(212)
-ax1.plot(t,instantaneous_frequency[2000:6000])
-ax1.set_xlabel("time in seconds")
-ax1.set_ylim(0.0,150.0)
-plt.show()
-
-plt.figure(figsize=(20,10))
-peaks, _ = find_peaks(bb, distance=1000,threshold=0.8,prominence=1)
-plt.plot(bb)
-plt.plot(peaks,bb[peaks],"x")
-plt.show()
-plt.close()
-
-plt.figure(figsize=(20,10))
-plt.plot(bb)
-plt.show()
-
-fig=plt.figure(figsize=(20,10))
-ax0=fig.add_subplot(211)
-ax0.plot(t,bb[2000:6000],label='signal')
-ax0.plot(t,amplitude_envelope[2000:6000],label='envelgope')
-ax0.legend()
-ax1=fig.add_subplot(212)
-ax1.plot(bb)
-ax1.plot(peaks,bb[peaks],"x",label="peak")
-plt.show()
-
-peaks, _ = find_peaks
-
-
-# # 데이터 전처리 후 아래부터는 DB 입력을 위한 작업
-#
-# testdb,cursor = dbIn()
-# IBP0731["0731IBPTIME"][0][0].year
-# IBP0731["0731IBPTIME"][0][0].month
-# IBP0731["0731IBPTIME"][0][0].day
-#
-#
-#
-#
-# #id,room_name,date,time,file_name,SV_value
-# sql="insert into SVtest_jy(room_name,date,time,file_name,SV_value) values(%s, %s, %s, %s,%s)"
-# dd,tt=splitTime(svt0731)
-# for i in range(len(svt0731)) :
-#     tempStr="/home/wlsdud1512/testNpz001/0731IBP" + str(i+1) +".npz"
-#     np.savez(tempStr,Time=IBP0731["0731IBPTIME"][i],Data=IBP0731["0731IBPDATA"]
-
-print(time.time() - start)
