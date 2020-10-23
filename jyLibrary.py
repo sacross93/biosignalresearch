@@ -282,7 +282,7 @@ def fivePlot(time,data) :
     plt.show()
     plt.close()
 
-def timeChange(time, timeType, lateTime=None):
+def timeChange(time, timeType=None, lateTime=None):
     tempTime = []
     a=np.array([])
     if timeType == 'timestamp':
@@ -303,6 +303,10 @@ def timeChange(time, timeType, lateTime=None):
                 tempTime.append(datetime.datetime.fromtimestamp(time[i]))
             else:
                 tempTime.append(datetime.datetime.timestamp(time[i] + datetime.timedelta(hours=lateTime)))
+    elif timeType is None :
+        for i in range(len(time)) :
+            tempTime.append(time[i] + datetime.timedelta(hours=lateTime))
+
     return tempTime
 
 def waveMatch(time1, data1, time2, data2) :
@@ -336,6 +340,7 @@ def timeBinarySearch(time,target) :
     #     target=int(datetime.datetime.timestamp(target))
     while(low<=high) :
         # print("??")
+        correct=0
         mid = int((low+high) / 2)
         # print(type(time[mid]))
         # print(target)
@@ -348,13 +353,23 @@ def timeBinarySearch(time,target) :
         else :
             print(time[mid])
             print("search")
+            correct=1
             break
     # print(mid)
-    if mid == 0 or mid == len(time):
+    if mid == 0 or mid == len(time) or correct == 0 :
         print("search fail")
         return -1
     else :
         return mid
+
+def SV_Time_Search(time,target) :
+    low=0
+    high=len(time)-1
+
+
+def SV_ABP_Time_Match(svTime,abpTime) :
+    startTime=timeBinarySearch(abpTime,svTime[0])
+    endTime=timeBinarySearch(abpTime,abpTime[-1])
 
 
 def splitTime(time):
@@ -458,4 +473,5 @@ def testDb(svtime,svdata,ibpDic) :
         tempDataSet = ("D-05", dd[i], tt[i], tempStr, float(svdata[i]))
         cursor.execute(tempSql, tempDataSet)
         db.commit()
+
 #end DB process
