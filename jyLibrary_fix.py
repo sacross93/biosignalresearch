@@ -81,7 +81,7 @@ def searchDateRoom(roomname,year,month=None,day=None) :
     #     tempSplit=i.split('/')
     #     if tempSplit[5].find(teststr) != -1:
     #         vrfile.append(i)
-    
+
     with Pool(cpu//2) as p :
         vrfile = p.map(split_day,roomDir)
 
