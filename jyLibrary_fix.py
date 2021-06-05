@@ -38,6 +38,7 @@ def search(dirname,address=None):
 
     for filename in filenames:
         full_filename.append(os.path.join(dirname, filename))
+
     return full_filename
 
 def searchRoomAllFile(roomname):
@@ -60,6 +61,7 @@ def searchRoomAllFile(roomname):
             file.remove(i)
 
     file.sort()
+
     return file
 
 def searchDateRoom(roomname,year,month=None,day=None) :
@@ -69,15 +71,9 @@ def searchDateRoom(roomname,year,month=None,day=None) :
     teststr = str(year)
 
     if month != None :
-        if month // 10 == 0 :
-            teststr += str(0)+str(month)
-        else :
-            teststr += str(month)
+        teststr += str(month.zfill(2))
     if day != None :
-        if day // 10 == 0 :
-            teststr += str(0)+str(day)
-        else :
-            teststr += str(day)
+        teststr += str(day.zfill(2))
 
     teststr = teststr.replace("None", "")
 
