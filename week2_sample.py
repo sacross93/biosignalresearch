@@ -242,9 +242,9 @@ pd.DataFrame(list_2d)
 my_dic = {'a': [1, 3], 'b': [2, 4], 'c': [5, 6]}
 pd.DataFrame(my_dic)
 
-pd.Series(['i', 'am', 'hungry’])
+pd.Series(['i', 'am', 'hungry'])
 
-           menu_name = pd.Series(['coffee', 'muffin', 'juice'])
+menu_name = pd.Series(['coffee', 'muffin', 'juice'])
 prices = pd.Series([3000, 2500, 5500])
 pd.DataFrame({"Menu names": menu_name, "Prices": prices})
 
@@ -252,27 +252,28 @@ pd.DataFrame({"Menu names": menu_name, "Prices": prices})
 df0 = pd.DataFrame(my_dic)
 df0.loc[1] = [7, 9, 8]
 # df붙이기 df0 = df0.append(df00)
-df0[‘d’]=pd.Series([10, 12], index=df0.index)
+df0['d']=pd.Series([10, 12], index=df0.index)
 
 # 실습5
 import matplotlib.pyplot as plt
 
-df4 = pd.read_csv('/L3098.csv')  # df4.head() 입력해서 확인
-df4.columns = ['ID', 'date', 'lab_code', 'code_name', 'result']  # df4.head()
-df5 = pd.read_csv('/L3098.csv', names=['ID', 'date', 'lab_code', 'code_name', 'result’])    #df5.head()
+df4 = pd.read_csv('L3098.csv')  # df4.head() 입력해서 확인
+df4.columns = ['ID', 'date', 'lab_code', 'code_name', 'result','comment']  # df4.head()
+df5 = pd.read_csv('L3098.csv', names=['ID', 'date', 'lab_code', 'code_name', 'result','comment'])    #df5.head()
                                        # 데이터프레임 csv로 저장하기: df5.to_csv('L3098_header.csv')
                                        # 구글드라이브의 저장경로 지정하기: !cp L3098_header.csv '저장경로'
 
-                                       plt.hist(df5['result'], bins=10)  # bins 값을 조절해가며 결과 보기
+plt.hist(df5['result'], bins=10)  # bins 값을 조절해가며 결과 보기
+plt.show()
 
 
 # 생존분석
-import?pandas?as?pd
-import?numpy?as?np
-import?matplotlib.pyplot?as?plt
-from?lifelines?import?KaplanMeierFitter
-durations?=?[5, 6, 6, 2.5, 4, 4]
-event_observed?=?[1, 0, 0, 1, 1, 1]
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from lifelines import KaplanMeierFitter
+durations = [5, 6, 6, 2.5, 4, 4]
+event_observed = [1, 0, 0, 1, 1, 1]
 kmf?=?KaplanMeierFitter()
 kmf.fit(durations,?event_observed,?label = 'Kaplan?Meier?Estimate')
 kmf.plot(ci_show=False)  # Confidence interval은 안 봅니다.
