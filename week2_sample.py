@@ -314,6 +314,7 @@ kmf.plot()
 plt.title("The Kaplan-Meier Estimate")
 plt.xlabel("Number of days")
 plt.ylabel("Probability of survival")
+plt.show()
 
 # 생존분석: Cox regression
 df2 = pd.read_csv('DATA_B2.csv')
@@ -333,5 +334,6 @@ cph.print_summary()
 cph.plot()
 
 cph.plot_partial_effects_on_outcome(covariates='seer_stage', values=[0, 1, 2, 3, 4, 7, 9], cmap='coolwarm')
+plt.show()
 
 # 끝!
