@@ -274,8 +274,8 @@ import matplotlib.pyplot as plt
 from lifelines import KaplanMeierFitter
 durations = [5, 6, 6, 2.5, 4, 4]
 event_observed = [1, 0, 0, 1, 1, 1]
-kmf?=?KaplanMeierFitter()
-kmf.fit(durations,?event_observed,?label = 'Kaplan?Meier?Estimate')
+kmf = KaplanMeierFitter()
+kmf.fit(durations,event_observed,label = 'Kaplan?Meier?Estimate')
 kmf.plot(ci_show=False)  # Confidence interval은 안 봅니다.
 
 
@@ -283,30 +283,28 @@ kmf.plot(ci_show=False)  # Confidence interval은 안 봅니다.
 import pandas as pd
 from datetime import datetime, timedelta
 
-a = "2021-03-21“
-A = datetime.strptime(a, '%Y-%m-%d’)
-b = "21-May-21"
-B = datetime.strptime(b,’ % y - % B - % d’)  # %y는 두 자리 연도, %B는 영문 월 이름에 연결
-C = B ? A
-Print(C)
+a = '2021-03-21'
+A = datetime.strptime(a, '%Y-%m-%d')
+b = '21-May-21'
+B = datetime.strptime(b,'%y-%B-%d')  # %y는 두 자리 연도, %B는 영문 월 이름에 연결
+C = B-A
+print(C)
 
 import pandas as pd
 from datetime import datetime, timedelta
 
-df1 = pd.read_csv('/content/DATA_B1.csv’)
+df1 = pd.read_csv('DATA_B1.csv')
 df1.head()
 
-Df1.info()
+df1.info()
 print(df1['Dx_age'].hist())
 
 df1['Dx_date'] = pd.to_datetime(df1['Dx_date'])
 df1['final_status_date'] = pd.to_datetime(df1['final_status_date'])
 
-df1['date_delta'] = df1[‘final_status_date
-'] ? df1['
-Dx_date’]
+df1['date_delta'] = df1['final_status_date']-df1['Dx_date']
 
-Df1.info()
+df1.info()
 
 # 생존분석
 kmf = KaplanMeierFitter()
@@ -318,17 +316,17 @@ plt.xlabel("Number of days")
 plt.ylabel("Probability of survival")
 
 # 생존분석: Cox regression
-df2 = pd.read_csv('/content/DATA_B2.csv’)
+df2 = pd.read_csv('DATA_B2.csv')
 df2.head()
 
 df2.info()
-print(df2[seer_stage
-'].hist())
+print(df2['seer_stage'].hist())
 
 from lifelines import CoxPHFitter
 
 cph = CoxPHFitter()
-cph.fit(df2, duration_col='date_delta', event_col='dead’)
+# cph.fit(df2, duration_col='date_delta', event_col='dead')
+cph.fit(df2, duration_col='date_dif', event_col='dead')
 
 cph.print_summary()
 
