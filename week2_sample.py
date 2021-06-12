@@ -138,7 +138,7 @@ ff.close()
 # 내 하드웨어에서 파일선택
 import io  # pandas를 불러오지 않았을 경우 “import pandas as pd”도 같이 해줍시다.
 
-df1 = pd.read_csv(io.BytesIO(os.path('DATA_B.csv')))
+df1 = pd.read_csv(io.BytesIO(b'DATA_B1.csv'))
 df1.head(5)
 
 # from google.colab import drive
@@ -155,7 +155,7 @@ df3 = pd.read_csv(url, encoding='cp949')
 
 import os, re
 
-os.chdir('c://py_work')
+# os.chdir('c://py_work')
 
 in_text = open("breast_us_sample.txt", "r")
 out_text = open("breast_cancer_out.txt", "w")
@@ -164,29 +164,26 @@ PT_cat = {}
 
 for x in in_text:
     m = re.search(r'(\D{3}\d{3})', x)
-mm = re.search(r'BIRADS\scategory\s([A-Z]+)', x)
-if m:
-    PT_ID = m.group(1)
-elif mm:
-    cat_no = mm.group(1)
-PT_cat[PT_ID] = cat_no
-else:
-pass
+    mm = re.search(r'BIRADS\scategory\s([A-Z]+)', x)
+    if m:
+        PT_ID = m.group(1)
+    elif mm:
+        cat_no = mm.group(1)
+        PT_cat[PT_ID] = cat_no
+    else :
+        pass
 
 for x in PT_cat:
-    if
-PT_cat[x] == "V"
-OR
-PT_cat[x] == "VI":
-print(x)
-else:
-pass
+    if PT_cat[x] == "V" or PT_cat[x] == "VI":
+        print(x)
+    else:
+        pass
 
 # 실습4 SEER DB에서 특정기간 유방암 여성 환자 수 확인하기
 
 import os, re
 
-os.chdir('c://py_work')
+# os.chdir('c://py_work')
 
 in_text = open("seer_breast_sample.txt", "r")
 out_text = open("breast_enrol_sample.txt", "w")
@@ -199,36 +196,36 @@ stage_count = 0
 
 for x in in_text:
     x_ID = x[0:8]
-x_year = int(x[38:42])
-x_sex = int(x[23:24])
-x_stage7 = x[320:323]
-x_stage6 = x[329:331]
-total_PT = total_PT + 1
-if x_sex == 2:
-    f_count = f_count + 1
-if x_year >= 2000 and x_year <= 2015:
-    Dx_year_count = Dx_year_count + 1
-m = re.match("\d", x_stage7)
-if m:
-    int_stage7 = int(x_stage7)
-if int_stage7 >= 100 and int_stage7 < 700:
-    stage_count = stage_count + 1
-out_text.write(x)
-else:
-pass
-else:
-m = re.match("\d", x_stage6)
-if m:
-    int_stage6 = int(x_stage6)
-if int_stage6 >= 10 and int_stage6 < 70:
-    stage_count = stage_count + 1
-out_text.write(x)
-else:
-pass
-elif x_sex == 1:
-m_count = m_count + 1
-else:
-pass
+    x_year = int(x[38:42])
+    x_sex = int(x[23:24])
+    x_stage7 = x[320:323]
+    x_stage6 = x[329:331]
+    total_PT = total_PT + 1
+    if x_sex == 2:
+        f_count = f_count + 1
+        if x_year >= 2000 and x_year <= 2015:
+            Dx_year_count = Dx_year_count + 1
+            m = re.match("\d", x_stage7)
+            if m:
+                int_stage7 = int(x_stage7)
+                if int_stage7 >= 100 and int_stage7 < 700:
+                    stage_count = stage_count + 1
+                    out_text.write(x)
+                else:
+                    pass
+            else:
+                m = re.match("\d", x_stage6)
+                if m:
+                    int_stage6 = int(x_stage6)
+                    if int_stage6 >= 10 and int_stage6 < 70:
+                        stage_count = stage_count + 1
+                        out_text.write(x)
+        else:
+            pass
+    elif x_sex == 1:
+        m_count = m_count + 1
+    else:
+        pass
 
 print(total_PT, f_count, m_count, Dx_year_count, stage_count)
 
