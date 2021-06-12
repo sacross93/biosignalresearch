@@ -1,10 +1,12 @@
+import os, csv
+import pandas as pd
+import re
+
 # 실습1
 # Header 확인하기 + row 개수 세기
 
-import os, csv
-import pandas as pd
-
 # os.chdir('c://py_work')
+os.chdir('C://Users/jykim/Downloads/Week2/3. EMR 데이터 심화실습/2021 EMR 심화실습_자료')
 
 f = open('lab_result_sample.csv', 'r', encoding='cp949')
 rdr = csv.reader(f)
@@ -18,7 +20,14 @@ for x in rdr:
         pass
     row_count += 1
 
+print(str(row_count))
 f.close()
+
+# 이렇게 쓰는 것이 훨씬 효율적임
+data = pd.read_csv('lab_result_sample.csv',encoding='cp949')
+print(len(data))
+
+#-------------------------------------------
 
 # lab_code가 L3098인 검사 결과만 새로운 파일로 만들기
 import os, csv, re
@@ -43,9 +52,7 @@ f.close()
 ff.close()
 
 # 정규표현식 (주민번호)
-(\d{2})(\d
-{2})(\d{2}) - (1 | 2)(\d
-{6})
+# (\d{2})(\d{2})(\d{2}) - (1 | 2)(\d{6})
 
 # 문자열 매치하기
 import re
@@ -82,10 +89,12 @@ print(m.group())
 sample_text = 'I want to go home : I want to sleep'
 m = re.split(':', sample_text)
 
-# 실습2
-import os, csv, re
+print(m)
 
-os.chdir('c://py_work')
+# 실습2
+
+
+# os.chdir('c://py_work')/
 # PC에서 작업할 경우
 
 f = open('lab_result_sample.csv', 'r', encoding='cp949')
@@ -117,24 +126,25 @@ f.close()
 ff.close()
 
 # CSV 읽고 쓰기
-dataframe_name1 = pd.read_csv(‘경로 / filename1.csv’)  # 첫 행이 header가 아니면 header = None
-dataframe_name2.to_csv(‘경로 / filename2.csv’)  # defalut: header = True (첫번째 줄을 칼럼 이름으로 사용)
+# dataframe_name2=csv
+# dataframe_name1 = pd.read_csv('filename1.csv')  # 첫 행이 header가 아니면 header = None
+# dataframe_name2.to_csv('filename2.csv')  # defalut: header = True (첫번째 줄을 칼럼 이름으로 사용)
 
 
 # Google colab에서 파일 읽어오기
-from google.colab import files
+# from google.colab import files
 
-myfile = files.upload()
+# myfile = files.upload()
 # 내 하드웨어에서 파일선택
 import io  # pandas를 불러오지 않았을 경우 “import pandas as pd”도 같이 해줍시다.
 
-df1 = pd.read_csv(io.BytesIO(myfile['DATA_B.csv'])
+df1 = pd.read_csv(io.BytesIO(os.path('DATA_B.csv')))
 df1.head(5)
 
-from google.colab import drive
+# from google.colab import drive
 
-drive.mount('/content/drive’)
-filename = '/content/drive/MyDrive/Colab Notebooks/DATA_B2.csv'  # 우클릭후 파일 경로 확인
+# drive.mount('/content/drive’)
+filename = 'DATA_B2.csv' # 우클릭후 파일 경로 확인
 df2 = pd.read_csv(filename)  # 변수 (filename) 대신에 바로 파일 경로 입력 가능
 
 url = 'https://raw.githubusercontent.com/haepary/lecture_data/master/lab_result_sample.csv'
