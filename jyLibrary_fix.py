@@ -98,4 +98,3 @@ def get_data(vr_address,request_data,is_Match=None) :
     vr_file=vr.VitalFile(vr_address)
     with Pool(cpu//2) as p :
         time,data=p.map(vr_file.get_samples,request_data)
-        
