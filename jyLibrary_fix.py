@@ -21,9 +21,11 @@ from scipy.signal import butter, lfilter, hilbert, chirp ,find_peaks
 from scipy import signal
 from scipy.interpolate import interp1d
 
+## ---------- 1.global parameter
 cpu = multiprocessing.cpu_count()
+## ---------- end
 
-#start read vital file
+## ---------- 2.read vital file list
 def search(dirname,address=None):
     full_filename = []
     if address == None :
@@ -87,6 +89,9 @@ def searchDateRoom(roomname,year,month=None,day=None) :
 
     return vrfile
 
+## ---------- end
+
+## ---------- 3.start data load
 def split_day(teststr) :
     tempSplit=teststr.split('/')
     if tempSplit[5].find(teststr) != -1 :
@@ -96,5 +101,17 @@ def split_day(teststr) :
 
 def get_data(vr_address,request_data,is_Match=None) :
     vr_file=vr.VitalFile(vr_address)
+
     with Pool(cpu//2) as p :
         time,data=p.map(vr_file.get_samples,request_data)
+
+    return time,data
+
+def searchWaveform(data):
+    waveForm = ['ECG_II', 'ART1', 'ART2', 'VOLT', 'IBP1', 'IBP3', 'PLETH', 'ECG1', 'CO2', 'AWP','AUDIO','ABP']
+    if any(data in word for word in waveForm):
+        return True
+    else:
+        return False
+
+## ---------- end
